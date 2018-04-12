@@ -1,0 +1,353 @@
+<?php
+
+namespace Secaa\Controller;
+
+use Secaa\Controller\AppController;
+
+class ExamenesController extends AppController
+{
+    public function initialize()
+    {
+         parent::initialize();
+         //$this->user = $this->request->session()->read('Auth.User');
+         
+         $this->loadModel('Exams');
+         $this->loadModel('Modules');
+         $this->loadModel('Questions');
+         $this->loadModel('Answers');
+    }
+    
+    
+    //Template
+    
+    public function index()
+    {
+        $this->set('var1', 'var1');
+        
+        if ($this->request->is('post')){
+             if ($this->request->data('crear')!= null )
+            {
+                return $this->redirect(['controller'=>'Examenes','action'=>'create']);
+            }
+             if ($this->request->data('cargar')!= null )
+            {
+                $this->setAction('cargarExamen');
+            }
+            if ($this->request->data('borrar')!= null )
+            {
+                echo "borrando un examen";
+            }
+        }
+    }
+    
+    
+    public function create()
+    {
+        $this->set('var1', 'var1');
+            //Multiple submit
+            if ($this->request->data('main')!= null && $this->request->is('post'))
+            {
+                //echo "regresando al menu";
+                return $this->redirect(['controller'=>'Examenes','action'=>'index']);
+                //$this->edit();  $this->request->data('guardar')
+            }
+            if ($this->request->data('guardar')!= null && $this->request->is('post') )
+            {
+                
+                //var_dump($this->request->data);
+
+                $tmp = $this->request->data;
+
+                //variables auxiliares
+                $array_rubro= array();
+                $array_pregunta = array();
+                $array_respuesta= array();
+
+                //Auxiliares
+                $preguntaAnterior = '0';
+                $rubroAnterior = '0';
+
+                //Falta respuesta correcta, porcentajes
+
+                //arreglo_asociativo, indice>valor
+                foreach ($tmp as $elemento => $valor )
+                {
+                     //Expresion regular
+                     //echo (preg_match('/Rubro/',$elemento));
+
+                    //Datos del examen
+                    if( preg_match('/certificacion/',$elemento) == 1  )
+                    {
+                        /*Generar y guardar*/
+                        $examen [$elemento] = $valor;
+                    }
+
+                    if( preg_match('/listaTipoExamen/',$elemento) == 1  )
+                    {
+                        /*Generar y guardar*/
+                        $examen [$elemento] = $valor;
+                    }
+                   //Reconocer datos de los rubros
+                    if( preg_match('/Rubro/',$elemento) == 1  )
+                    {
+                        //Se guardan los valores de las preguntas y respuestas en el array rubro
+                        if ($rubroAnterior != '0')
+                        {
+                            $array_pregunta["Respuestas".$preguntaAnterior] = $array_respuesta;
+                            $array_rubro["preguntas".$rubroAnterior] = $array_pregunta;   
+                            $array_respuesta = array() ;
+                            $array_pregunta = array() ;     
+                        }
+                        //Asignacion el rubro actual
+                        $rubroAnterior = $elemento;
+                        //Reinicializar valor de respuesta, porque ya fue asignada
+                        $preguntaAnterior = '0';
+                        $array_rubro ["temas".$elemento] = $valor;       
+                    }
+
+                    //Reconocer datos de las preguntas
+                    if( preg_match('/textoPregunta/',$elemento) == 1  ){
+
+                        //Cada vez que llegue una nueva pregunta, se vacian las respuestas
+                        if ($preguntaAnterior != '0')
+                        {
+                            //guardar las respuestas de la preguna anterior
+                            $array_pregunta["Respuestas".$preguntaAnterior] = $array_respuesta;
+                            $array_respuesta = array() ;
+                        }
+                        //Se guarda la referencia de la pregunta actual
+                        $preguntaAnterior  = $elemento;
+                        $array_pregunta[$elemento] = $valor;
+                    }
+
+                    if( preg_match('/tipoPregunta/',$elemento) == 1  )
+                    {
+                        $array_pregunta[$elemento] = $valor;
+                    }
+
+
+                    //Reconocer formato de la respuesta
+                    if( preg_match('/Respuesta/',$elemento) == 1  )
+                    {    
+                        $array_respuesta[$elemento] = $valor;                        
+                    }
+                    else if  ( preg_match('/Correcta/',$elemento) == 1  )
+                    {
+                        $array_respuesta[$elemento] = $valor;   
+                    }
+
+                }
+                //Guardar valores del ultimo rubro
+                $array_pregunta["Respuestas".$preguntaAnterior] = $array_respuesta;
+                $array_rubro["preguntas".$rubroAnterior] = $array_pregunta; 
+                //Guardar al examen
+                $examen ['Rubro'] = $array_rubro;
+                //$examen = array('listaTipoExamen' => $this->request->data['listaTipoExamen'], 'Rubros' => $array_rubro);
+                $this->guardarExamen($examen);
+            }
+        
+    }
+    
+    public function edit($array_examen)
+    {
+        $this->set('var1', 'var1');
+        //Crear el arreglo que contenga la informacion de la bd
+        $this->set('id',$array_examen);
+        
+        if($array_examen == ''){
+            echo "No se ha cargado nada"; 
+        }
+     
+        if ($this->request->is('post'))
+        {
+            //Multiple submit
+            if ($this->request->data('main')!= null )
+            {
+                return $this->redirect(['controller'=>'Examenes','action'=>'index']);
+            }
+        } 
+    }
+    
+    //Funciones
+
+    
+    public function guardarExamen($array_examen)
+    {  
+        $exams = $this->Exams->newEntity();
+        
+        //para guardar el id
+        $idModule =0;
+        $idQuestion =0;
+        $ans = "";
+        //
+        //var_dump($array_examen);
+        
+        foreach ($array_examen as $elemento => $valor)
+        {
+            //obj = (this -> entidad) o (tabla) ->  patchEntity (obj, arreglo_asociativo_datosExactos )
+            if( preg_match('/certificacion/',$elemento) == 1  ){
+                //Ver que tipo de examen es
+                $tmp=array();
+                if ($valor == "Sec")
+                {
+                    $tmp["exam_type"]=1;
+                }
+                if ($valor == "SiC")
+                {
+                    $tmp["exam_type"]=2;
+                }
+                if ($valor == "NoC")
+                {
+                    $tmp["exam_type"]=3;
+                }
+
+                $exams = $this->Exams->patchEntity($exams, $tmp);
+                if ($this->Exams->save($exams)) {
+                   // echo "Guardado exitoso".$tmp["exam_type"];
+                } 
+//                 echo $exams["id"];
+//                 var_dump ($exams);
+            }  
+            
+            if( preg_match('/Rubro/',$elemento) == 1  )
+            {
+                $tmp=array();
+                foreach ($valor as $elementoRubro => $valorRubro)
+                {
+                    $modules = $this->Modules->newEntity();
+                    if( preg_match('/temas/',$elementoRubro) == 1 )
+                    {
+                        
+                        $tmp["module_type"]= $valorRubro;
+                        $tmp["exam_id"]= $exams["id"];
+                           //Guardado
+                        $modules  = $this->Modules->patchEntity($modules, $tmp);
+                        if ($this->Modules->save($modules))
+                        {
+                            //echo "Guardado exitoso rubro";
+                        } 
+                        $idModule = $modules["id"];  
+                    }
+                   
+                    if( preg_match('/preguntas/',$elementoRubro) == 1 )
+                    {
+                        $tmpPreg= array();
+                        foreach ($valorRubro as $elementoQuest => $valorQuest)
+                        {
+                            $questions = $this->Questions->newEntity();
+                            if( preg_match('/textoPregunta/',$elementoQuest) == 1  )
+                            {  
+                                $tmpPreg["question_text"]= $valorQuest;
+                            }
+                            if( preg_match('/tipoPregunta/',$elementoQuest) == 1  )
+                            {
+                                $tmpPreg["question_type"]= $valorQuest;
+                                $tmpPreg["module_id"]= $idModule;
+                                             
+                                $questions = $this->Questions->patchEntity($questions,$tmpPreg);   
+                                if ($this->Questions->save($questions)) {
+                                    //echo "Pregunta guardada";
+                                }
+                                $idQuestion= $questions["id"]; 
+                            }
+                            if( preg_match('/Respuestas/',$elementoQuest ))
+                            {    
+                                $tmpAns= array();
+                                foreach ($valorQuest as $elementoAns => $valorAns)
+                                {
+                                    $answers = $this->Answers->newEntity();
+                                    //Solo entrara el txt de la respuesta
+                                      if( preg_match('/Respuesta/',$elementoAns )== 1)
+                                     {
+                                        //var_dump(array_keys($valorQuest, next($valorQuest)));
+                                        //Obtener el indice de la respuesta siguiente
+                                        $ans = array_keys($valorQuest, next($valorQuest))[0];
+
+                                        $tmpAns["answers_text"]= $valorAns;
+                                        $tmpAns["question_id"]= $idQuestion;
+                                        
+                                         if( preg_match('/Correcta/', $ans ))
+                                        {
+                                            $tmpAns["correct"]= true;
+                                        }
+                                        else
+                                        {
+                                            $tmpAns["correct"]= false;
+                                        }
+                                        
+                                        $answers = $this->Answers->patchEntity($answers,$tmpAns);   
+                                        if ($this->Answers->save($answers)) {
+                                            echo "Respuesta guardada";
+                                            //return $this->redirect(['controller'=>'Examenes','action'=>'index']);
+                                        }
+                                        //var_dump($tmpAns);
+                                    }
+                                }  
+                            }      
+                        }
+                    }
+                }
+            }
+        }
+        return $this->redirect(['controller'=>'Examenes','action'=>'index']);
+    }
+
+    
+   public function cargarExamen($id_examen="8")
+   {    
+       //Recuperar los valores para cargarlos en el arreglo.
+        $array_examen = array();
+        $tmp = array();
+        
+        //Examenes -> first()
+        $exams = $this->Exams->find('all',['fields'=>['id','exam_type']] )  ->where( ['id' => $id_examen ]) ->first() ->toArray() ;
+        $modules = $this->Modules->find('all',['fields'=>['id','module_type', 'exam_id']] ) ->where( ['exam_id' => $exams['id'] ]) -> toArray();
+
+        //Modulos
+        $array_examen["modules"]= array();
+        for ($i=0; $i< count($modules); $i++)
+        {
+            $tmp["id"]=$modules[$i]["id"];
+            $tmp["module_type"]= $modules[$i]["module_type"];
+            $tmp["exam_id"]= $modules[$i]["exam_id"];
+            $array_examen["modules"][$i]=$tmp;
+            $tmp=array();
+            
+            //Preguntas
+            $array_examen["modules"][$i]["questions"] = array();
+            $questions = $this->Questions->find('all' ,['fields'=>['id','question_text', 'question_type']] ) ->where( ['module_id' => $modules[$i]["id"] ]) -> toArray();
+            for ($j=0; $j< count($questions); $j++)
+            {
+                $tmp["id"] = $questions[$j]["id"];
+                $tmp["question_text"] = $questions[$j]["question_text"];
+                $tmp["question_type"] = $questions[$j]["question_type"];
+                $array_examen["modules"][$i]["questions"][$j] = $tmp;
+                $tmp=array();
+                
+                //Respuestas
+                $array_examen["modules"][$i]["questions"][$j]["answers"] = array();
+                $answers = $this->Answers->find('all' ,['fields'=>['id','answers_text', 'correct']] ) ->where( ['question_id' => $questions[$j]["id"] ]) -> toArray();
+                for ($k=0; $k< count($answers); $k++)
+                {
+                    $tmp["id"] = $answers[$k]["id"];
+                    $tmp["answers_text"] = $answers[$k]["answers_text"];
+                    $tmp["correct"] = $answers[$k]["correct"];
+                    $array_examen["modules"][$i]["questions"][$j]["answers"][$k] = $tmp;
+                    $tmp=array();
+                }  
+            }        
+        }
+            
+        $array_examen["id"]= $exams["id"];
+        $array_examen["exam_type"]= $exams["exam_type"];
+        
+        /*
+        var_dump($array_examen["modules"][0]["questions"][0]["answers"]);
+        var_dump($array_examen["modules"][0]["questions"][1]["answers"]);
+        var_dump($array_examen["modules"][0]["questions"]);
+        var_dump($array_examen["modules"][1]["questions"]);
+        */
+        
+        $this->setAction('edit',$array_examen);
+    } 
+}

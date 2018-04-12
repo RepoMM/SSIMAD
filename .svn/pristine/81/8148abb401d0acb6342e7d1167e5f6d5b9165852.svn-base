@@ -1,0 +1,23 @@
+<?php
+use Cake\Routing\Router;
+
+Router::plugin('Secaa', function ($routes) {
+    $routes->fallbacks('DashedRoute');
+});
+
+
+// <?php
+// use Cake\Routing\Router;
+
+//Nuevo codigo
+
+// Router::plugin('ContactManager', function ($routes) {
+//     $routes->fallbacks('DashedRoute');
+
+//antiguo codigo
+
+// Router::plugin('SECAA', function ($routes) {
+//     $routes->fallbacks('InflectedRoute');
+// });
+
+// });

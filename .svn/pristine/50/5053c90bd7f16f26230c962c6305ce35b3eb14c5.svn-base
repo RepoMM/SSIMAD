@@ -1,0 +1,55 @@
+<?php
+namespace Secaa\Test\Fixture;
+
+use Cake\TestSuite\Fixture\TestFixture;
+
+/**
+ * QuestionsFixture
+ *
+ */
+class QuestionsFixture extends TestFixture
+{
+
+    /**
+     * Fields
+     *
+     * @var array
+     */
+    // @codingStandardsIgnoreStart
+    public $fields = [
+        'id' => ['type' => 'integer', 'length' => 11, 'unsigned' => false, 'null' => false, 'default' => null, 'comment' => '', 'autoIncrement' => true, 'precision' => null],
+        'module_id' => ['type' => 'integer', 'length' => 11, 'unsigned' => false, 'null' => false, 'default' => null, 'comment' => '', 'precision' => null, 'autoIncrement' => null],
+        'question_text' => ['type' => 'string', 'length' => 45, 'null' => true, 'default' => null, 'comment' => '', 'precision' => null, 'fixed' => null],
+        'question_type' => ['type' => 'string', 'length' => 45, 'null' => true, 'default' => null, 'comment' => '', 'precision' => null, 'fixed' => null],
+        'created' => ['type' => 'datetime', 'length' => null, 'null' => true, 'default' => null, 'comment' => '', 'precision' => null],
+        'modified' => ['type' => 'datetime', 'length' => null, 'null' => true, 'default' => null, 'comment' => '', 'precision' => null],
+        '_indexes' => [
+            'fk_questions_modules1_idx' => ['type' => 'index', 'columns' => ['module_id'], 'length' => []],
+        ],
+        '_constraints' => [
+            'primary' => ['type' => 'primary', 'columns' => ['id'], 'length' => []],
+            'fk_questions_modules1' => ['type' => 'foreign', 'columns' => ['module_id'], 'references' => ['modules', 'id'], 'update' => 'noAction', 'delete' => 'noAction', 'length' => []],
+        ],
+        '_options' => [
+            'engine' => 'InnoDB',
+            'collation' => 'utf8_spanish_ci'
+        ],
+    ];
+    // @codingStandardsIgnoreEnd
+
+    /**
+     * Records
+     *
+     * @var array
+     */
+    public $records = [
+        [
+            'id' => 1,
+            'module_id' => 1,
+            'question_text' => 'Lorem ipsum dolor sit amet',
+            'question_type' => 'Lorem ipsum dolor sit amet',
+            'created' => '2015-12-02 15:48:36',
+            'modified' => '2015-12-02 15:48:36'
+        ],
+    ];
+}

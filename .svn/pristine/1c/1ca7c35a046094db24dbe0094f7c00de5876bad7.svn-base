@@ -1,0 +1,66 @@
+<?php
+namespace App\Controller;
+
+use App\Controller\AppController;
+
+/**
+ * This controller will render views from Template/MenuAlumnos/
+ *
+ * 
+ */
+class MenuAlumnosController extends AppController
+{
+    public function seleccion(){
+        if($this->request->data['grupo'] != ''){
+            $this->request->session()->write('Auth.User.group_id',$this->request->data['grupo']);
+        }else{
+            $this->request->session()->write('Auth.User.group_id',NULL);
+        }
+            
+        return $this->redirect(['action'=>'index']);
+    }
+
+    public function index(){
+        $info_group = array();
+        $id = $this->request->session()->read('Auth.User.id');
+        $this->loadModel('Registrations');$this->loadModel('InfoGroups');
+        
+        if(!is_null($this->request->session()->read('Auth.User.group_id'))){
+            $group_id = $this->request->session()->read('Auth.User.group_id');
+            $info_group = $this->InfoGroups->find('all')->where(['group_id' => $group_id])->first();
+        }
+        $registrations = $this->Registrations->find('list', ['keyField' => 'slug','valueField' =>'group_id'])->where(['student_id' => $id]);
+        $groups = $this->InfoGroups->find('list', ['keyField' => 'group_id','valueField' =>'name'])->where(['group_id IN' => $registrations->toArray()]);
+        $this->set(compact('groups','info_group'));
+    }
+    public function asignatura(){
+        $this->loadModel('InfoGroups');
+        if($this->request->session()->read('Auth.User.group_id') != ''){
+            $group_id = $this->request->session()->read('Auth.User.group_id');
+            $group = $this->InfoGroups->find('all')->where(['group_id' => $group_id])->first();
+        }else{
+            //Redireccionar por si no está el group_id en la sesión
+            return $this->redirect(['action'=>'index']);
+        }
+        $this->set('group',$group);
+    }
+    public function calificaciones(){
+        
+    }
+    public function asistencia(){
+        
+    }
+    public function entregables(){
+        
+    }
+    public function mensajes(){
+        
+    }
+    public function enviar_correo(){
+        
+    }
+    public function material_didactico(){
+        
+    }
+    
+}

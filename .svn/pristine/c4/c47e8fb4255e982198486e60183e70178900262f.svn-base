@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Editar examen</title>
+        <br>
+        Editar examen
+        <br>
+    </head>
+        
+    <body>
+        <br>
+        <br>
+        <script type="text/javascript">
+            /*Codigo de js que se utiliza para la generacion de preguntas*/
+            var generaId = 0;
+            var contadorPregunta = 0;
+            var contadorName = 0;
+
+            var seleccionado = true;
+            var examenSeleccionado = true;
+            var rubroGenerado = false;
+
+            var tipoExamen = null;
+            //var strTipoExamen = '';
+
+    /*Crear cualquier objeto de html, especificando el tipo*/
+            function dce(tipo){
+                return document.createElement(tipo);
+            }
+
+            function crearNodoTexto(tipo){
+                return document.createTextNode(tipo);
+            }
+
+            function GenerarId(){
+                generaId = generaId + 1;
+                return generaId; 
+            }
+
+            function ContadorPregunta(){
+                contadorPregunta = contadorPregunta + 1;
+                return contadorPregunta; 
+            }
+
+            function GenerarNumeroRespuesta(){
+                contadorName = contadorName + 1;
+                return contadorName; 
+            }
+
+            //Funciones para generar las formas, utilizando js.  function GenerarInput(z,a,b,c,d)
+            //Z= tipoDiv, A = id, B = type, C = name, D= value
+            function GenerarInput(z,a,b,c,d){
+                input=dce(z);
+                input.id=a;
+                input.type=b;
+                input.name=c;
+                input.value=d;
+                return input;
+             }
+
+            function GenerarDiv(z,a,c,d){
+                input=dce(z);
+                input.id=a;
+                input.name=c;
+                input.value=d;
+                return input;
+             }
+             
+           //String element
+            function GenerarRespuesta(element,ansTxt,ansCorrect)
+            {
+                //Generar el div contenedor
+                // idDivRespuesta es el string del id de todo el div
+                var idDivRespuesta =  "idDivRespuesta"+GenerarId();
+                var divRespuesta = dce('div');
+                divRespuesta.id= idDivRespuesta;
+
+                var capa = document.getElementById(element);
+                capa.parentNode.appendChild(divRespuesta);
+                GenerarTipoRespuesta(idDivRespuesta,ansTxt,ansCorrect);
+            }
+            
+            /*Funcion utilizada por el boton de anadir incisos*/
+            function GenerarTipoRespuesta(element,ansTxt,ansCorrect){
+                //Generar el id del div respuesta
+                //var idx=element.value;
+                var idDivRespuesta = "idDivInciso"+GenerarId();
+
+                //Texto del recuadro
+                var str1= " Ingresa el texto de la respuesta:";
+                var str2= "Respuesta correcta";
+                    //Como debe de ser tipo nodo el resultado, se genera un nodo.
+                h1 = crearNodoTexto(str1);
+                h2 = crearNodoTexto(str2);
+
+                /*Los tipos de respuestas posibles son:
+                    ab - abierta
+                    om - opcion multiple
+                    or - ordenamiento
+                    tf - verdadero falso*/
+                //Formato de respuesta de opcion multiple
+
+            //Funciones para generar las formas, utilizando js.  function GenerarInput(z,a,b,c,d)
+            //Z= tipoDiv, A = id, B = type, C = name, D= value
+
+                var input1 = GenerarInput('input',"idTextoInciso"+GenerarId(),"text","textoRespuesta"+contadorName,ansTxt);
+                
+                if(ansCorrect == '1')
+                {
+                    var input2 = GenerarInput('input',"idIncisoCorrecto"+GenerarId(),"checkbox","respuestaCorrecta"+contadorName,'c');
+                }
+                else
+                {
+                    var input2 = GenerarInput('input',"idIncisoCorrecto"+GenerarId(),"checkbox","respuestaCorrecta"+contadorName,'c');
+                    input2.checked = true;
+                }
+                
+                var input3 = GenerarInput('input',"idBorrarInciso"+GenerarId(),"button","borrarRespuesta"+contadorName,"Eliminar respuesta");
+                GenerarNumeroRespuesta();
+                input3.addEventListener("click", function( event )
+                {
+                        // Se utiliza el id generado anteriormente, para poder eliminarla
+                    var temp = document.getElementById(idDivRespuesta);
+                    temp.parentNode.removeChild(temp);
+                } , true); 
+
+                var divRespuesta= dce('div');
+                divRespuesta.id=idDivRespuesta;
+
+                divRespuesta.appendChild(h1);
+                divRespuesta.appendChild(input1);
+                divRespuesta.appendChild(input2);
+                divRespuesta.appendChild(h2);
+                divRespuesta.appendChild(input3);
+
+                //Anadir las respuestas elaboradas en el div de la respuesta.
+                var capa = document.getElementById(element);
+                capa.appendChild(divRespuesta);
+               // }
+            }
+            
+            
+            
+            
+            function GenerarPregunta(element, questTxt, questType)
+            {
+            /*Generar el id del div*/
+                var idDivPregunta = "idDivPregunta"+GenerarId();
+
+                var str1= ContadorPregunta()+'.- Escribe el texto de la pregunta';
+                var str2= "Selecciona el tipo de pregunta.";
+                //Como debe de ser tipo nodo el resultado, se genera un nodo.
+                var h1 = crearNodoTexto(str1);
+                var h2 = crearNodoTexto(str2);
+
+                var input1 = GenerarInput("input","idTextoPregunta"+GenerarId() ,"text","textoPregunta"+contadorName,questTxt);
+
+                //Funciones para generar las formas, utilizando js.  function GenerarInput(z,a,b,c,d)
+                //Z= tipoDiv, A = id, B = type, C = name, D= value
+                //Opciones   <option value="1" selected>Selecciona una opcion</option>
+                
+        
+                var option1 = GenerarDiv("option","idOpcion"+GenerarId(),"pregunta"+contadorName,'1');
+                //option1.selected=true;
+                option1.text="Seleccione una opcion";
+
+                var option2 = GenerarDiv("option","idOpcion"+GenerarId(),"abierta"+contadorName,"ab");
+                option2.text="Pregunta abierta";
+                var option3 = GenerarDiv("option","idOpcion"+GenerarId(),"opcionMultiple"+contadorName,"om");
+                option3.text="Opcion multiple";
+                var option4 = GenerarDiv("option","idOpcion"+GenerarId(),"ordenamiento"+contadorName,"or");
+                option4.text="Ordenamiento";
+                var option5 = GenerarDiv("option","idOpcion"+GenerarId(),"verdaderoFalso"+contadorName,"tf");
+                option5.text="Verdadero o falso";
+                
+                
+                if(questType == "ab")
+                {
+                   option2.selected=true; 
+                }
+                else if(questType == "om")
+                {
+                    option3.selected=true;
+                }
+                else if(questType == "or")
+                {
+                    option4.selected=true;
+                }
+                else if(questType == "tf")
+                {
+                    option5.selected=true;
+                }
+                else
+                {
+                    option1.selected=true;
+                }
+                
+                
+                var select1=GenerarDiv("select","idOpcionMultiple"+GenerarId(),"tipoPregunta"+contadorName,'1');
+                GenerarNumeroRespuesta();
+                //Anadir un boton que genere respuestas
+                var input3=GenerarInput('input',"idAgregarInciso"+GenerarId(),"button","respuestaOpcion"+contadorName,"Agregar inciso");
+
+                input3.addEventListener("click", function(){
+                    GenerarTipoRespuesta(idDivPregunta);
+                });
+
+                var input4 = GenerarInput('input',"idBorrarPregunta"+GenerarId(),"button","incisoPregunta"+contadorName,"Eliminar pregunta");
+
+                input4.addEventListener("click", function( event ) {
+                    // Se utiliza el id generado anteriormente, para poder eliminarla
+                    var temp = document.getElementById(idDivPregunta);
+                    temp.parentNode.removeChild(temp);
+                    } , true);
+
+                /*De acuerdo al tipo de respuesta, aqui se valida cuantos incisos se anexan*/
+                /*Pendiente validar si el select genera respuestas*/
+
+                // select1.addEventListener("change", function( event ) {
+                //         // Se utiliza el id generado anteriormente, para poder eliminarla
+                //         GenerarRespuesta(select1);
+                //       } , true);
+
+                select1.appendChild(option1);
+                select1.appendChild(option2);
+                select1.appendChild(option3);
+                select1.appendChild(option4);
+                select1.appendChild(option5);
+
+                /*Anadir los elementos al div creado*/
+                var fieldset1=GenerarDiv("fieldset","idFieldset"+GenerarId(),"fieldset"+contadorName,"f");
+                fieldset1.appendChild(select1);
+
+                //Generar el div de la pregunta
+                var divPregunta= dce('div');
+                divPregunta.id=idDivPregunta;
+
+                divPregunta.appendChild(h1);
+                divPregunta.appendChild(input1);
+                divPregunta.appendChild(h2);
+                divPregunta.appendChild(fieldset1);
+                //Anadiendo el boton
+                divPregunta.appendChild(input3);
+                divPregunta.appendChild(input4);
+
+                //Acceder al fieldset, para que se genere el div pregunta
+                var capa = document.getElementById(element.id);
+                capa.appendChild(divPregunta);
+                return divPregunta;
+            }
+            
+            
+            
+            function GenerarRubro(element, seleccion, examCert)
+            {
+            //Generar el div contenedor
+            // idDivRubro es el string del id de todo el div
+            var idDivRubro =  "idDivRubro"+GenerarId();
+            var divRubro = dce('div');
+            divRubro.id= idDivRubro;
+            divRubro.className = 'rubro';
+            
+
+            var str1= "Selecciona el rubro.";
+            var h1 = crearNodoTexto(str1);
+            
+            var str2= "Bienvenido al examen tradicional.";
+            var h2 = crearNodoTexto(str2);
+            
+            var idTipoTema = "TipoExamenSeleccionado";
+            //Funciones para generar las formas, utilizando js.  function GenerarInput(z,a,b,c,d)
+            //Z= tipoDiv, A = id, B = type, C = name, D= value
+            //Opciones   <option value="1" selected>Selecciona una opcion</option>
+
+            var option1 = GenerarDiv("option","idOpcion"+GenerarId(),"pregunta"+contadorName,'1');
+            option1.text = "Selecciona una opcion";
+            //option1.selected=true;
+            
+            var option4 = GenerarDiv("optgroup",idTipoTema+GenerarId(),"Temario"+contadorName,"t");
+            option4.label="Temas";
+            var option2 = GenerarDiv("option",idTipoTema+GenerarId(),"tema"+contadorName,"t1");
+            option2.text="TemaConsultado1";
+            var option3 = GenerarDiv("option",idTipoTema+GenerarId(),"tema"+contadorName,"t2");
+            option3.text="TemaConsultado2";
+
+            if(examCert == "t1")
+            {
+                option2.selected=true; 
+            }
+            else if(examCert == "t2")
+            {
+                option3.selected=true;
+            }
+            else
+            {
+                option1.selected=true;
+            }
+
+            var select1=GenerarDiv("select","idOpcionTemario"+GenerarId(),"Rubro"+contadorName,'1');
+            GenerarNumeroRespuesta();
+            
+            
+            /*De acuerdo al tipo de respuesta, aqui se valida cuantos incisos se anexan                                 */
+            // select1.addEventListener("change", function( event ) {
+            //         // Se utiliza el id generado anteriormente, para poder eliminarla
+            //         GenerarPregunta(select1);
+            //       } , true);
+
+            select1.appendChild(option1);
+            select1.appendChild(option4);
+            select1.appendChild(option2);
+            select1.appendChild(option3);
+            
+            /*Anadir los elementos al div creado*/
+            var fieldset1=GenerarDiv("fieldset","idFieldset"+GenerarId(),"fieldset"+contadorName,"f");
+            fieldset1.appendChild(select1);
+
+            
+            var input3=GenerarInput('input',"idAgregarPregunta"+GenerarId(),"button","preguntaOpcion"+contadorName,"Agregar pregunta");
+                input3.addEventListener("click", function(){
+                    GenerarPregunta(fieldset1);  
+            });
+            
+            var input5=GenerarInput('input',"idAgregarPregunta"+GenerarId(),"button","preguntaOpcion"+contadorName,"Agregar rubro");
+                input5.addEventListener("click", function()
+                {
+                    GenerarRubro(element,seleccion);
+            });
+            
+            var input4 = GenerarInput('input',"idBorrarRubro"+GenerarId(),"button","borrarRubro"+contadorName,"Eliminar rubro");
+                input4.addEventListener("click", function( event ) {
+                // Se utiliza el id generado anteriormente, para poder eliminarla
+                
+                var temp = document.getElementById(idDivRubro);
+                temp.parentNode.removeChild(temp);
+            } , true);
+
+            
+            /*Estrtucturar el div del rubro*/
+            if(seleccion == "rubroSecCert" || seleccion == '1' || seleccion == '2'){
+                divRubro.appendChild(h1);
+                divRubro.appendChild(fieldset1);
+                divRubro.appendChild(input3);
+                divRubro.appendChild(input4);
+                divRubro.appendChild(input5);
+                
+            }else if(seleccion == 'rubroTrad' || seleccion == '3'){
+                select1.style.display = 'none' ;
+                
+                divRubro.appendChild(h2);
+                divRubro.appendChild(fieldset1);
+                divRubro.appendChild(input3);
+                divRubro.appendChild(input5);
+            }
+            divRubro.className = seleccion;
+            //capa = document.getElementById(element.parentNode.id);
+            //                capa.appendChild(divTipoExamen);
+            //Acceder al fieldset, para que se genere el div pregunta
+            var capa = document.getElementById(element.parentNode.id);
+
+            capa.appendChild(divRubro);
+            return divRubro;
+        }
+        
+        
+        function GenerarTipoExamen(element)
+        {
+        //Generar el div contenedor
+            // idDivRubro es el string del id de todo el div
+            if(seleccionado)
+            {
+                seleccionado = false;
+                //Generar divs
+                var idDivTipoExamen =  "idDivTipoExamen"+GenerarId();
+                var divTipoExamen = dce('div');
+                divTipoExamen.id= idDivTipoExamen;
+                
+                var str1= "Indique si es un examen de certificacion";
+                var h1 = crearNodoTexto(str1);
+
+                var str2= "Si";
+                var h2 = crearNodoTexto(str2);
+                var str3= "No";
+                var h3 = crearNodoTexto(str3);
+
+                //radio buttoms
+                //Funciones para generar las formas.  function GenerarInput(z,a,b,c,d)
+                //Z= tipoDiv, A = id, B = type, C = name, D= value
+                //Opciones   <option value="1" selected>Selecciona una opcion</option>
+
+                var input3=GenerarInput('input',"idCertificacion"+GenerarId(),"radio","certificacion"+contadorName,"SiC");
+                var input4=GenerarInput('input',"idCertificacion"+GenerarId(),"radio","certificacion"+contadorName,"NoC");
+                var input5=GenerarInput('input',"idCertificacion"+GenerarId(),"button","certificacion"+contadorName,"Agregar");
+
+                //var form1=GenerarInput('form',"idFormCertificacion"+GenerarId(),"","certificacion"+contadorName,"form");
+                var fieldset1=GenerarInput("fieldset","idFieldset"+GenerarId(),"fieldset"+contadorName,"f");
+                fieldset1.className="tradicional";
+                
+                input5.addEventListener("click", function( event )
+                {
+                     // Seleccionar si es de certificacion, con rubros, o si es el tradicional
+                    var tmp= fieldset1.childNodes;
+                    //Recorrer a todos los hijos
+                    for(i=0; i<tmp.length; i++){   
+//                        alert(tmp[i].id);
+                        if(tmp[i].checked && tmp[i].value == "SiC")
+                        {
+                            GenerarRubro(divTipoExamen, 'rubroSecCert');
+                            
+                            var temp = document.getElementsByClassName('rubroSecCert');
+                            if(temp.length != 0)
+                            {
+                                for(j=0; j<temp.length; j++)
+                                {
+                                    temp[j].style.display = 'inline';
+                                }
+                            }
+                            temp = document.getElementsByClassName('rubroTrad');
+                            if(temp.length != 0){
+                                for(k=0; k<temp.length; k++){
+                                    temp[k].style.display = 'none';
+                                }
+                            } 
+                        
+                        }
+                        else if(tmp[i].checked && tmp[i].value == "NoC")
+                        {
+                            //Generar 1 solo rubro tradicional sin certificacion
+                            if(rubroGenerado == false){
+                                rubroGenerado=true;
+                                GenerarRubro(divTipoExamen, 'rubroTrad');
+                            }
+                            //Invisible para el ususario
+                            
+                            var temp = document.getElementsByClassName( 'rubroTrad');
+                            if(temp.length != 0){
+                                for(k=0; k<temp.length; k++){
+                                    temp[k].style.display = 'inline';
+                                }
+                            }
+                            temp = document.getElementsByClassName( 'rubroSecCert');
+                            if(temp.length != 0){
+                                for(j=0; j<temp.length; j++){
+                                    temp[j].style.display = 'none';
+                                }
+                            }
+                        }
+                    }
+                } , true);
+   
+                fieldset1.appendChild(h1);
+                fieldset1.appendChild(h2);
+                fieldset1.appendChild(input3);
+                fieldset1.appendChild(h3);
+                fieldset1.appendChild(input4);
+                fieldset1.appendChild(input5);
+
+                divTipoExamen.appendChild(fieldset1);
+                var capa = document.getElementById(element.parentNode.id);
+                capa.appendChild(divTipoExamen);
+                //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////
+                
+                var str4= "Bienvenido al sistema SECPIA";
+                var h4 = crearNodoTexto(str4);
+               
+                    //Ciclo for, cargando de la base de datos la lista de habilidades guardadas por el sistema
+//                var input6=GenerarInput('input',"idSecpia"+GenerarId(),"radio","secpia"+contadorName,"Habilidad1");
+//                var input7=GenerarInput('input',"idSecpia"+GenerarId(),"radio","secpia"+contadorName,"Habilidad2");
+                var input8=GenerarInput('input',"idCertificacion"+GenerarId(),"button","certificacion"+contadorName," Agregar rubro de habilidad");
+
+                input8.addEventListener("click", function( event )
+                {
+                    // Rubro secpia
+                    GenerarRubro(divTipoExamen, 'rubroSecCert');
+                        var temp = document.getElementsByClassName('rubroSecCert');
+                        if(temp.length != 0)
+                        {
+                            for(i=0; i<temp.length; i++)
+                            {
+                                temp[i].style.display = 'inline';
+                            }
+                        }
+                        temp = document.getElementsByClassName('rubroTrad');
+                        if(temp.length != 0)
+                        {
+                            for(i=0; i<temp.length; i++)
+                            {
+                                temp[i].style.display = 'none';
+                            }
+                        }
+                    } , true);
+
+                var fieldset2=GenerarDiv("fieldset","idFieldset"+GenerarId(),"fieldset"+contadorName,"f");
+                fieldset2.className="secpia";
+                //Elemento oculto de secpia
+                var input9=GenerarInput('input',"idCertificacion"+GenerarId(),"radio","certificacion"+contadorName,"Sec");
+                input9.checked =true;                 
+                input9.style.display ='none'; 
+                
+                
+                fieldset2.appendChild(h4);
+                fieldset2.appendChild(input8);
+                fieldset2.appendChild(input9);
+                
+                divTipoExamen.appendChild(fieldset2);
+
+                capa = document.getElementById(element.parentNode.id);
+                capa.appendChild(divTipoExamen);
+                
+                return divTipoExamen;
+                //capa.style.display = 'none';
+            }
+        }
+        
+        /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+
+        //Exam type: 1,2 certificacion, 3 no certificacion
+
+        function ValidarExamen(element,examID)
+        {
+            
+            tipoExamen = GenerarTipoExamen(element);
+            if(examID != null)
+            {
+                //secpia es 2
+                if(examID == '1')
+                {
+                    examID = '2';
+                }
+                //certificados es 1
+                else if(examID == '2'  || examID == '3')
+                {
+                    examID = '1';
+                }
+                var idx=examID;
+                document.getElementById(element.id).selectedIndex = idx;
+            }
+            else
+            {
+                var idx=element.selectedIndex;
+            }
+            var val=element.options[idx].value;
+          
+          
+            //Verificar que elementos ocultar o mostrar, ya sea de un examen tradicional, secpia o certificacion
+            if(val == 'S' || examID == '1')
+            {
+                //Busqueda de elementos por clase, dentro de element
+                var temp = document.getElementsByClassName('tradicional');
+                for(i=0; i<temp.length; i++)
+                {
+                    temp[i].style.display = 'none';
+                }
+                var temp = document.getElementsByClassName('secpia');
+                for(i=0; i<temp.length; i++)
+                {
+                    temp[i].style.display = 'inline';
+                }
+                
+            }
+            else if(val == 'T' || examID == '2')
+            {
+                //Busqueda de elementos por clase, dentro de element
+                var temp = document.getElementsByClassName('secpia');
+                for(i=0; i<temp.length; i++)
+                {
+                    temp[i].style.display = 'none';
+                }
+                
+                var temp = document.getElementsByClassName('tradicional');
+                for(i=0; i<temp.length; i++)
+                {
+                    temp[i].style.display = 'inline';
+                }
+            }
+            return tipoExamen;
+        }
+        </script>
+        
+        <div id="examen">
+            <fieldset id="fieldset0">
+                <br>Tipo Examen
+                <select id="ex" name="listaTipoExamen" onchange="ValidarExamen(this);" id="tipoExamen">
+                    <optgroup label="Tipos de examen">
+                        <option value="1" >Selecciona una opcion</option>
+                        <option value="T" >Tradicional</option>
+                        <option value="S" >SECPIA</option>
+                </select>
+            </fieldset>    
+        </div>
+        
+        <?php
+            //Se debe de crear una forma, y terminarla, para poderlas usar
+            //var_dump($id);
+            //$arregloAiterar   $cadaelemento => $llaveDeCadaElemento
+            echo $this->Form->create($var1, ['enctype' => 'multipart/form-data']);
+            echo $this->Form->submit('Regresar al menu principal', array('name'=>'main', 'value' =>'2'));
+            echo $this->Form->end();
+            
+            /* Guardar las ids para actualizar los examenes */
+            
+            ?>
+            <script type="text/javascript">
+                var tmpE= ValidarExamen(document.getElementById("ex"),
+                    "<?php echo $id["exam_type"]?>");
+            </script>
+            <?php 
+            foreach ($id as $keyExa => $valueExa)
+            {     
+                if ($keyExa == "modules")
+                {
+                    for ($i=0; $i< count($valueExa); $i++)
+                    {
+                        /*
+                        echo "id: ",$valueExa[$i]["id"], "<br>";
+                        echo "module_type: ",$valueExa[$i]["module_type"], "<br>";
+                        echo "exam_id: ",$valueExa[$i]["exam_id"], "<br>";
+                        //echo $valueExa[$i]["questions"];
+                        */
+                        
+                        ?>
+                            <script type="text/javascript">
+                                var tmpM= GenerarRubro(tmpE,
+                                    "<?php echo $valueExa[$i]["exam_id"]?>",
+                                    "<?php echo $valueExa[$i]["module_type"]?>" 
+                                );
+                            </script>
+                        <?php 
+                        
+                        for ($j=0; $j< count($valueExa[$i]["questions"]); $j++)
+                        {
+                            /*
+                            echo "id: ",$valueExa[$i]["questions"][$j]["id"], "<br>";
+                            echo "question_text: ",$valueExa[$i]["questions"][$j]["question_text"], "<br>";
+                            echo "question_type: ",$valueExa[$i]["questions"][$j]["question_type"], "<br>";
+                            */
+                            
+                            ?>
+                                <script type="text/javascript">
+                                    var tmpQ= GenerarPregunta(tmpM,
+                                        "<?php echo $valueExa[$i]["questions"][$j]["question_text"]?>",
+                                        "<?php echo $valueExa[$i]["questions"][$j]["question_type"]?>"    
+                                    );
+                                </script>
+                            <?php 
+                            
+                            for ($k=0; $k< count($valueExa[$i]["questions"][$j]["answers"]); $k++)
+                            {
+                                //var_dump($valueExa[$i]["questions"][$j]["answers"][$k]);
+                                /*echo "id: ",$valueExa[$i]["questions"][$j]["answers"][$k]["id"], "<br>";
+                                echo "answers_text: ",$valueExa[$i]["questions"][$j]["answers"][$k]["answers_text"], "<br>"; 
+                                echo "correct: ",$valueExa[$i]["questions"][$j]["answers"][$k]["correct"], "<br>"; 
+                                */
+                                ?>
+                                    <script type="text/javascript">
+                                       GenerarTipoRespuesta(tmpQ.id,
+                                       "<?php echo $valueExa[$i]["questions"][$j]["answers"][$k]["answers_text"]?>",
+                                       "<?php echo $valueExa[$i]["questions"][$j]["answers"][$k]["correct"]?>"
+                                       );
+                                    </script>
+                                <?php 
+                            }    
+                        }
+                    }
+                }
+                else
+                {
+                    //var_dump($keyExa);
+                    //var_dump($valueExa);
+                }
+                
+                ?>
+                <script type="text/javascript">
+                   // GenerarRespuesta("examen",h1,h2);
+                </script>
+                <?php      
+            }
+        ?>
+                
+    </body>
+</html>

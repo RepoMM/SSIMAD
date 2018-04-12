@@ -1,0 +1,10 @@
+<?php
+
+// plugins/Secaa/src/Controller/AppController.php
+namespace Secaa\Controller;
+
+use App\Controller\AppController as BaseController;
+
+class AppController extends BaseController
+{
+}

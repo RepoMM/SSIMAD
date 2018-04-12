@@ -1,0 +1,20 @@
+<div class="groups form large-10 medium-9 columns">
+    <?php echo $this->Html->link('Regresar',['controller'=>'menu_profesores','action'=>'index'])?>
+    <?= $this->Form->create($group) ?>
+    <fieldset>
+        <legend><?= __('Add Group') ?></legend>
+        <?php
+            echo $this->Form->input('course_id', ['options' => $courses]);
+            echo $this->Form->hidden('professor_id', ['value' => $professor]);
+            echo $this->Form->input('group_number');
+            echo $this->Form->input('class_schedule');
+            echo $this->Form->input('classroom');
+            echo $this->Form->hidden('semester_id', ['value' => $semester->id, 'hidden' => TRUE]);
+            echo $this->Form->label('semester_id');
+            echo $semester->name;
+            
+        ?>
+    </fieldset>
+    <?= $this->Form->button(__('Submit')) ?>
+    <?= $this->Form->end() ?>
+</div>

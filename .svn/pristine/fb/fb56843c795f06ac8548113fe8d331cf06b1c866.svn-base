@@ -1,0 +1,299 @@
+<?php
+namespace App\Controller;
+
+use App\Controller\AppController;
+use Cake\Event\Event;
+
+/**
+ * This controller will render views from Template/ListaAlumnos/
+ *
+ * 
+ */
+class ListaAlumnosController extends AppController
+{
+    private $user;
+    /**
+     * Initialization hook method.
+     *
+     * Use this method to add common initialization code like loading components.
+     *
+     * @return void
+     */
+    public function initialize()
+    {
+         parent::initialize();
+         $this->user = $this->request->session()->read('Auth.User');
+         
+        $this->loadModel('Registrations');
+        $this->loadModel('Students');
+        $this->loadModel('Assignments');
+        $this->loadModel('Grades');
+        $this->loadModel('Weights');
+        $this->loadModel('InfoGrades');
+    }
+    
+    /**
+     * 
+     */
+    public function index(){
+        $group_id = $this->user['group_id'];
+        $registrations = $this->Registrations->find('list',['keyField' => 'slug','valueField' =>'student_id'])->where(['group_id'=> $group_id ]);
+        
+        $students = $this->Students->find('all')->where(['id IN'=>$registrations->toArray()])->order(['paternal_surname' =>'ASC']);
+        $this->set(compact('students','group_id'));
+    }
+    
+    /**
+     * 
+     * @return type
+     */
+    public function agregar_alumno(){
+        $new = FALSE;
+        $student = $this->Students->newEntity();
+        if ($this->request->is('post')) {
+            $studentdb = $this->Students->find('all')->where(['username'=>$this->request->data['username']])->first();
+             
+            if(!is_null($studentdb)){
+                $this->registrar($this->user['group_id'], $studentdb->id,FALSE);
+                return $this->redirect(['controller'=>'lista_alumnos','action' => 'index']);
+            }
+            $new=TRUE;
+            $valid = $this->request->data['valid'];unset($this->request->data['valid']);
+            if($valid){
+                $student = $this->Students->patchEntity($student, $this->request->data,['validate'=>'addProf']);
+                if($student->email == '')
+                    $student->email = $student->username.'@default.com';
+                if ($this->Students->save($student)) {
+                    $this->registrar($this->user['group_id'], $student->id,TRUE);
+                    return $this->redirect(['controller'=>'lista_alumnos','action' => 'index']);
+                }  else {
+                    $this->Flash->error(__('The student could not be saved. Please, try again.'));
+                } 
+                
+            }           
+        }
+        $this->set(compact('student','new'));
+    }
+    /**
+     * 
+     * @param type $group_id
+     * @param type $student_id
+     * @param type $message
+     * @return int
+     */
+    protected function registrar($group_id = null,$student_id,$message = null){
+        $registration = $this->Registrations->newEntity();
+        $data = ['group_id'=> $group_id,'student_id'=>$student_id];
+        $registration = $this->Registrations->patchEntity($registration,$data);
+        
+        if(!$this->Registrations->save($registration)){
+            if($message)//Al agregar a alguien que ya está inscrito
+                $this->Flash->error(__('The registration could not be saved. Please, try again.'));
+            return 0;
+        }
+        $this->agregar_calificaciones($group_id,$student_id);
+    }
+    /**
+     * 
+     * @param type $group_id
+     * @param type $student_id
+     */
+    protected function agregar_calificaciones($group_id = null,$student_id = null){
+        $weights = $this->Weights->find('list',['keyField' => 'slug','valueField' =>'id'])->where(['group_id' =>  $group_id,'name NOT LIKE ' => 'asistencia']);
+        $assignments = $this->Assignments->find('all')->where(['weight_id IN'=>  $weights->toArray()]);
+        
+        if($assignments->count() != 0){
+            foreach ($assignments as $assignment){
+                $data = ['student_id'=>$student_id,'assigment_id'=>$assignment->id,'value'=>0];
+                $grade = $this->Grades->newEntity();
+                $grade = $this->Grades->patchEntity($grade, $data);
+                $this->Grades->save($grade);
+            }
+        }
+    }
+    /**
+     * 
+     * @param type $student_id
+     * @param type $group_id
+     * @return type
+     */
+    public function borrar_alumno($student_id = null,$group_id = null)
+    {
+        $this->request->allowMethod(['post', 'delete']);
+        $registration = $this->Registrations->get([$student_id,$group_id]);
+        if ($this->Registrations->delete($registration)) {
+            //$this->Flash->success(__('The registration has been deleted.'));
+            $this->borrar_calificaciones($group_id, $student_id);
+        } else {
+            //$this->Flash->error(__('The registration could not be deleted. Please, try again.'));
+        }
+        return $this->redirect(['controller'=>'lista_alumnos','action' => 'index']);
+    }
+    /**
+     * 
+     * @param type $group_id
+     * @param type $student_id
+     */
+    protected function borrar_calificaciones($group_id = null,$student_id = null){
+        $weights = $this->Weights->find('list',['keyField' => 'slug','valueField' =>'id'])->where(['group_id'=>  $group_id,'name NOT LIKE ' => 'asistencia']);
+        $assignments = $this->Assignments->find('list',['keyField' => 'slug','valueField' =>'id'])->where(['weight_id IN'=>  $weights->toArray()]);
+        if($assignments->count() != 0){
+            $this->Grades->deleteAll(['student_id'=>$student_id,'assigment_id IN'=>$assignments->toArray()]);
+        }
+    }
+    
+    public function lista(){
+        if ($this->request->is('post')) {
+            var_dump($this->request->data);
+        }
+    }
+    /**
+     * 
+     */
+    public function calificaciones(){
+        $group_id = $this->user['group_id'];
+        $registrations = $this->Registrations->find('list',['keyField' => 'slug','valueField' =>'student_id'])->where(['group_id'=> $group_id ]);
+        $weights = $this->Weights->find('list',['keyField' => 'weight','valueField' =>'id'])->where(['group_id'=>  $group_id]);
+        $weights = $weights->toArray();
+        $assignments = $this->Assignments->find('list',['keyField' => 'name','valueField' =>'id'])->where(['weight_id IN'=>  $weights])->order(['name'=>'ASC']);
+        $students_assignments = $this->Students->find('all')
+                                               ->order(['paternal_surname' =>'ASC'])
+                                               ->where(['id IN'=> $registrations->toArray()])
+                                               ->contain(['InfoGrades' => function ($q) use ($assignments) {
+                                                                    return $q
+                                                                         ->where(['InfoGrades.assigment_id IN' => $assignments->toArray()])
+                                                                         ->order(['InfoGrades.name'=>'ASC']);
+                                                                    }
+                                                             ]);
+        $this->set(compact('weights','assignments','students_assignments'));
+    }
+    
+    public function agregar_calificacion() {
+        $group_id = $this->user['group_id'];
+        $assignment = $this->Assignments->newEntity();
+        if ($this->request->is('post')) {
+            $assignment = $this->Assignments->patchEntity($assignment, $this->request->data);
+            if ($this->Assignments->save($assignment)) {
+                
+                $registrations = $this->Registrations->find('list')->where(['group_id'=> $group_id ]);
+                $students = $this->Students->find('all',['fields' => ['id']])->where(['id IN'=>$registrations->toArray()]);
+                
+                foreach ($students as $student){
+                    $data = ['student_id'=>$student->id,'assigment_id'=>$assignment->id,'value'=>0];
+                    $grade = $this->Assignments->Grades->newEntity();
+                    $grade = $this->Assignments->Grades->patchEntity($grade, $data);
+                    $this->Assignments->Grades->save($grade);
+                }
+                $this->Flash->success(__('The assignment has been saved.'));
+                return $this->redirect(['controller'=>'lista_alumnos','action' => 'calificaciones']);
+            } else {
+                $this->Flash->error(__('The assignment could not be saved. Please, try again.'));
+            }
+        }
+        $weights = $this->Assignments->Weights->find('list', ['limit' => 200])->where(['group_id'=> $group_id,'name NOT LIKE ' => 'asistencia']);
+        $this->set(compact('assignment', 'weights'));
+    }
+    
+    public function modificar_calificacion($id) {
+        $assignment = $this->Assignments->get($id, [
+            'contain' => []
+        ]);
+        if ($this->request->is(['patch', 'post', 'put'])) {
+            $assignment = $this->Assignments->patchEntity($assignment, $this->request->data);
+            if ($this->Assignments->save($assignment)) {
+                $this->Flash->success(__('The assignment has been saved.'));
+                return $this->redirect(['controller'=>'lista_alumnos','action' => 'calificaciones']);
+            } else {
+                $this->Flash->error(__('The assignment could not be saved. Please, try again.'));
+            }
+        }
+        $weights = $this->Assignments->Weights->find('list', ['limit' => 200]);
+        $this->set(compact('assignment', 'weights'));
+    }
+    
+    public function borrar_calificacion($id) {
+        $this->request->allowMethod(['post', 'delete']);
+        $assignment = $this->Assignments->get($id);
+        if ($this->Assignments->delete($assignment)) {
+            $this->Flash->success(__('The assignment has been deleted.'));
+        } else {
+            $this->Flash->error(__('The assignment could not be deleted. Please, try again.'));
+        }
+        return $this->redirect(['controller'=>'lista_alumnos','action'=>'calificaciones']);
+    }
+    
+    /**
+     * 
+     * @return type
+     */
+    public function guardar_calificaciones(){
+//        var_dump($this->request->data['calificaciones']);
+//        exit;
+        $data = $this->request->data['calificaciones'];
+        foreach($data as $key => $grades){
+            foreach ($grades as $key2 => $data_grade){
+                $grade = $this->Grades->newEntity($data_grade);
+                $this->Grades->save($grade, ['atomic' => false]);
+                var_dump($grade->errors());
+            }
+        }
+        return $this->redirect(['controller'=>'lista_alumnos','action'=>'calificaciones']);
+    }
+    
+    
+    public function conceptos() {
+        $array_weights = array();
+        $group_id = $this->user['group_id'];
+        
+            
+        if ($this->request->is('post')) {
+            $data = $this->request->data['weights'];
+//            var_dump($this->request->data['terminar']);
+//            //var_dump($data);
+//            exit;
+            foreach ($data as $key => $data_weight){
+                    $weight = $this->Weights->newEntity();
+                    $weight->group_id = $group_id;
+                    $weight = $this->Weights->patchEntity($weight,$data_weight);
+                    if(isset($this->request->data['terminar']) && $this->request->data['terminar'] == 'end')
+                        $this->Weights->save($weight);
+                    $array_weights[] = $weight;
+                }
+            if(isset($this->request->data['agregar']) && $this->request->data['agregar'] == 'add'){
+                
+                $aux = end($array_weights);
+                if(empty($aux->errors())){
+                    $array_weights[] = $this->Weights->newEntity();
+                }
+            }
+        }else{
+            $weights = $this->Weights->find('all')->where(['group_id'=> $group_id]);
+            if($weights->count() != 0){
+                foreach ($weights as $weight){
+                    $array_weights[] = $weight;
+                }
+                $array_weights[] = $this->Weights->newEntity();
+            }else{
+                $array_weights[] = $this->Weights->newEntity();
+            }
+        }
+        
+        $this->set(compact('array_weights'));
+    }
+    
+    public function borrar_concepto($id = null) {
+        
+        $weight = $this->Weights->find('all')->where(['id'=>$id,'group_id'=>$this->user['group_id']])->first();
+        if ($this->Weights->delete($weight)) {
+            $this->Flash->success(__('The weight has been deleted.'));
+        } else {
+            $this->Flash->error(__('The weight could not be deleted. Please, try again.'));
+        }
+        return $this->redirect(['controller'=>'lista_alumnos','action' => 'conceptos']);
+    }
+
+    public function asistencias(){
+        
+    }
+    
+}

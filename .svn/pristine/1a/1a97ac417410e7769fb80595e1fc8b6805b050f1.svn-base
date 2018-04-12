@@ -1,0 +1,15 @@
+<div>
+    <div>
+    Hola Profesor <?= $this->request->session()->read('Auth.User.full_name')?> <?= $this->Html->link('Regresar',['controller'=>'lista_alumnos','action'=>'index'])?>
+    <br/>
+    <?php if(FALSE){?>
+        <span><?= $this->Html->link('Guardar asistencias',['controller'=>'lista_alumnos','action'=>'guardar'])?></span>
+        <span>|</span>
+    <?php }?>
+    <span><?= $this->Html->link('Agregar asistencia',['controller'=>'lista_alumnos','action'=>'asistencias'])?></span>
+    
+    
+
+</div>
+  
+</div>

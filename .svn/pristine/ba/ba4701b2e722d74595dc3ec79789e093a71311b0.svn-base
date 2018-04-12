@@ -1,0 +1,15 @@
+<div class="groups form large-10 medium-9 columns">
+    <?php echo $this->Html->link('Regresar',['controller'=>'menu_profesores','action'=>'index'])?>
+    <?= $this->Form->create($group) ?>
+    <fieldset>
+        <legend><?= __('Edit Group') ?></legend>
+        <?php
+            echo $this->Form->label('group_number');
+            echo $group->group_number;
+            echo $this->Form->input('class_schedule');
+            echo $this->Form->input('classroom');
+        ?>
+    </fieldset>
+    <?= $this->Form->button(__('Submit')) ?>
+    <?= $this->Form->end() ?>
+</div>

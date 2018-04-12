@@ -1,0 +1,30 @@
+<html>
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+        <meta http-equiv="content-language" content="es" />
+        <title>Bienvenido al menu principal</title>
+    </head>
+    
+    <div id="examen">
+            <?php
+            echo "Bienvenido profesor";
+            echo '<br>';
+            echo '<br>';
+            echo "¿Qué desea hacer?";
+            
+            //Se debe de crear una forma, y terminarla, para poderlas usar
+             echo $this->Form->create($var1, ['enctype' => 'multipart/form-data']);
+
+              echo '<br>';
+              echo $this->Form->submit('Crear examen', array('name'=>'crear', 'value' =>'1') );
+              echo '<br>';
+              echo $this->Form->submit('Cargar Examen', array('name'=>'cargar', 'value' =>'2'));
+              echo '<br>';
+              echo $this->Form->submit('Borrar Examen', array('name'=>'borrar', 'value' =>'3'));
+              echo $this->Form->end();         
+            ?>
+                
+        </div>
+    
+</html>

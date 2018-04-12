@@ -1,0 +1,28 @@
+<nav class="large-3 medium-4 columns" id="actions-sidebar">
+    <ul class="side-nav">
+        <li class="heading"><?= __('Actions') ?></li>
+        <li><?= $this->Form->postLink(
+                __('Delete'),
+                ['action' => 'delete', $module->id],
+                ['confirm' => __('Are you sure you want to delete # {0}?', $module->id)]
+            )
+        ?></li>
+        <li><?= $this->Html->link(__('List Modules'), ['action' => 'index']) ?></li>
+        <li><?= $this->Html->link(__('List Exams'), ['controller' => 'Exams', 'action' => 'index']) ?></li>
+        <li><?= $this->Html->link(__('New Exam'), ['controller' => 'Exams', 'action' => 'add']) ?></li>
+        <li><?= $this->Html->link(__('List Questions'), ['controller' => 'Questions', 'action' => 'index']) ?></li>
+        <li><?= $this->Html->link(__('New Question'), ['controller' => 'Questions', 'action' => 'add']) ?></li>
+    </ul>
+</nav>
+<div class="modules form large-9 medium-8 columns content">
+    <?= $this->Form->create($module) ?>
+    <fieldset>
+        <legend><?= __('Edit Module') ?></legend>
+        <?php
+            echo $this->Form->input('exam_id', ['options' => $exams]);
+            echo $this->Form->input('module_type');
+        ?>
+    </fieldset>
+    <?= $this->Form->button(__('Submit')) ?>
+    <?= $this->Form->end() ?>
+</div>
