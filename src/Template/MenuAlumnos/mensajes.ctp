@@ -12,11 +12,11 @@
     				<th>Contenido</th>
     				<th>Fecha Publicacion</th>
     			</tr>
-    		</thead>	
+    		</thead>
     		<tbody>
-                <?php 
+                <?php
                     if( isset( $messages ) )
-                    { 
+                    {
                 ?>
     			<?php foreach( $messages as $msn  ): ?>
     			<tr>

@@ -11,7 +11,7 @@ use Cake\Validation\Validator;
  * InfoGroups Model
  *
  */
-class InfoGroupsTable extends Table
+class InfoGradesTable extends Table
 {
     /**
      * Initialize method
@@ -25,7 +25,7 @@ class InfoGroupsTable extends Table
 
         $this->table('info_grades');
         $this->displayField('name');
-        
+
         $this->belongsTo('Students', [
             'foreignKey' => 'student_id',
             'joinType' => 'INNER'

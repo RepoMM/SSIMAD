@@ -1,59 +1,57 @@
 <div>
+    Bienvenido(a) alumno(a) <?= $this->request->session()->read('Auth.User.full_name')?>
+    </br>
+    <?php echo $this->Html->link('Regresar al Menu Principal', ['controller' => 'menu_alumnos', 'action' => 'index' ]) ?><br />
+</div>
+<div>
+<?php $i=1;?>
+<h3>Material didáctico</h3>
     <div>
-        Bienvenido(a) alumno(a) <?= $this->request->session()->read('Auth.User.full_name')?>
-        </br>
-        <?php echo $this->Html->link('Regresar al Menu Principal', ['controller' => 'menu_alumnos', 'action' => 'index' ]) ?><br />
+        <?php echo $this->Html->link('Agregar Entregable', [ 'controller' => 'entregables', 'action'=> 'add' ] )?>
     </div>
-<h3>Material Didáctico</h3>
 <div class="materials index large-10 medium-9 columns">
+<?php if($materials->count() != 0){?>
     <table cellpadding="0" cellspacing="0">
     <thead>
         <tr>
-            <th><?= $this->Paginator->sort('#') ?></th>
-            <th><?= $this->Paginator->sort('name') ?></th>
-            <th><?= $this->Paginator->sort('material_type_id') ?></th>
-            <th><?= $this->Paginator->sort('description') ?></th>
-            <th><?= $this->Paginator->sort('course_id') ?></th>
-            <th><?= $this->Paginator->sort('professor_id') ?></th>
-            <th><?= $this->Paginator->sort('subject') ?></th>
+            <th><?= __('id') ?></th>
+            <th><?= __('name') ?></th>
+            <th><?= __('type') ?></th>
+            <th><?= __('description') ?></th>
+            <th><?= __('course') ?></th>
+            <th><?= __('professor') ?></th>
+            <th><?= __('subject') ?></th>
+            <th class="actions"><?= __('Actions') ?></th>
         </tr>
     </thead>
-
     <tbody>
-    <?php $id=0; foreach ($materials as $material){
-        $id++;
-    ?>
+    <?php foreach ($materials as $material): ?>
         <tr>
-            <td><?php echo $id; ?></td>
+            <td><?= $this->Number->format($i) ?></td>
+            <td><?= h($material->name) ?></td>
             <td>
-                <?php
-                    if (h($material->url)==NULL) {
-                        h($material->name_file);  
-                    } elseif (h($material->url)!=NULL) {
-                        echo $this->Html->link(
-                        h($material->name_file),
-                        '/files/materials/name/'.h($material->url).'/'.h($material->name)
-                        );
-                    }
-                ?>
+                <?= $material->type ?>
             </td>
-            <td><?= $material->has('material_type') ? $this->Html->link($material->material_type->name, ['controller' => 'MaterialTypes', 'action' => 'view', $material->material_type->id]) : '' ?></td>
-            <td><?= h($material->description) ?></td>
-            <td><?= $material->has('course') ? $this->Html->link($material->course->name, ['controller' => 'Courses', 'action' => 'view', $material->course->id]) : '' ?></td>
-            <td><?= $material->has('professor') ? $this->Html->link($material->professor->full_name, ['controller' => 'Professors', 'action' => 'view', $material->professor->id]) : '' ?></td>
-            <td><?= h($material->subject) ?></td>
+            <td>
+                <?= $material->description?>
+            </td>
+            <td>
+                <?= $material->course ?>
+            </td>
+            <td>
+                <?= $material->full_name ?>
+            </td>
+            <td><?= h($material->subject)?></td>
+            <td class="actions">
+                <?= $this->Html->link(__('Edit').'/'.__('Delete'), ['controller'=>'materials','action' => 'view', $material->id]) ?>
+            </td>
         </tr>
-
-    <?php }?>
+        <?php $i+=1;?>
+    <?php endforeach; ?>
     </tbody>
     </table>
-    <div class="paginator">
-        <ul class="pagination">
-            <?= $this->Paginator->prev('< ' . __('previous')) ?>
-            <?= $this->Paginator->numbers() ?>
-            <?= $this->Paginator->next(__('next') . ' >') ?>
-        </ul>
-        <p><?= $this->Paginator->counter() ?></p>
-    </div>
-</div>
+
+<?php }else {
+    echo 'No se encontraron datos';
+} ?>
 </div>

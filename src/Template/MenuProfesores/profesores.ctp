@@ -1,7 +1,6 @@
 <div>
-    Profesores
     <?php echo $this->Html->link('Regresar',['controller'=>'menu_profesores','action'=>'index']);?>
-    
+    <h3>Profesores</h3>
 </div>
 <div class="professors index large-10 medium-9 columns">
     <?php echo $this->Form->create(NULL,['controller'=>'menu_profesores','action'=>'enviar_correo','name'=>'profesores']);
@@ -15,7 +14,7 @@
         </tr>
     </thead>
     <tbody>
-    
+
     <?php foreach ($professors as $professor): ?>
         <tr>
             <td><?= h($professor->id) ?></td>
@@ -24,8 +23,8 @@
         </tr>
 
     <?php endforeach; ?>
-        
-    
+
+
     </tbody>
     </table>
     <?php echo $this->Form->end();?>

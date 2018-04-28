@@ -1,6 +1,5 @@
 <?php
 namespace App\Controller;
-
 use App\Controller\AppController;
 use Cake\Mailer\Email;
 use Cake\Event\Event;
@@ -9,7 +8,7 @@ use Cake\Event\Event;
 /**
  * This controller will render views from Template/MenuProfesores/
  *
- * 
+ *
  */
 class MenuProfesoresController extends AppController
 {
@@ -20,12 +19,12 @@ class MenuProfesoresController extends AppController
      * Use this method to add common initialization code like loading components.
      *
      * @return void
-     */ 
+     */
     public function initialize()
     {
          parent::initialize();
          $this->user = $this->request->session()->read('Auth.User');
-         
+
          $this->loadModel('Groups');
          $this->loadModel('Students');
          $this->loadModel('InfoGroups');
@@ -39,14 +38,14 @@ class MenuProfesoresController extends AppController
          $this->loadModel('Courses');
          $this->loadModel('Registrations');
     }
-    
+
     public function seleccion(){
         if($this->request->data['grupo'] != ''){
             $this->request->session()->write('Auth.User.group_id',$this->request->data['grupo']);
         }else{
             $this->request->session()->write('Auth.User.group_id',NULL);
         }
-            
+
         return $this->redirect(['controller'=>'menu_profesores','action'=>'index']);
     }
 
@@ -54,7 +53,7 @@ class MenuProfesoresController extends AppController
         $info_group = array();
         if(isset($this->user['data']))
             $this->request->session()->write('Auth.User.data',NULL);
-        
+
         if(!is_null($this->user['group_id'])){
             $info_group = $this->InfoGroups->find('all')->where(['group_id' => $this->user['group_id'] ])->first();
             //echo "Esto es un test";
@@ -62,8 +61,8 @@ class MenuProfesoresController extends AppController
         }
         $agroups = $this->Groups->find('list', ['keyField' => 'slug','valueField' =>'id'])->where(['professor_id' => $this->user['id']]);
         $groups = $this->InfoGroups->find('list', ['keyField' => 'group_id','valueField' =>'course_number_group','groupField' => 'name'])->where(['group_id IN' => $agroups->toArray()]);
-        
-    
+
+
 
         //echo "<br /> <br /> ";
 
@@ -89,12 +88,12 @@ class MenuProfesoresController extends AppController
 
 
 
-    
+
     public function agregar_grupo() {
         $group = $this->Groups->newEntity();
 
-        
-        if ($this->request->is('post')) 
+
+        if ($this->request->is('post'))
         {
             $group = $this->Groups->patchEntity($group, $this->request->data);
 
@@ -114,16 +113,16 @@ class MenuProfesoresController extends AppController
         $courses = $this->Groups->Courses->find('list', ['limit' => 200]);
         $professor = $this->user['id'];
         //$semester = $this->Groups->Semesters->find('all', ['fields'=>['id','name']])->where(['start_date <=' => $hoy, 'end_date >=' => $hoy])->first();
-       
+
         $semester = $this->Groups->Semesters->find('list', ['limit' => 200]);
 
 
 
         $this->set( [ 'group' => $group, 'courses' => $courses, 'professor' => $professor, 'semester' => $semester] );
-       
+
     }
-    
-    
+
+
 
 
 
@@ -155,23 +154,23 @@ class MenuProfesoresController extends AppController
 
 
 
-    
+
     public function mensajes() {
         if(is_null($this->user['group_id']))
                 return $this->redirect(['controller'=>'menu_profesores','action'=>'index']);
-        
+
         if(is_null($this->user['group_id']))//Redireccionar por si no está el group_id en la sesión
             return $this->redirect(['controller'=>'menu_profesores','action'=>'index']);
-            
+
         $messages = $this->Messages->find('all')->where(['group_id' => $this->user['group_id'] ]);
         $this->set('messages',$messages);
-        
+
     }
-    
+
     public function agregar_mensaje() {
 
-         
-  //       $var = new SendEmail(); 
+
+  //       $var = new SendEmail();
 //         $var->send_email();
 
         //$email = new Email('default');
@@ -198,7 +197,7 @@ class MenuProfesoresController extends AppController
         $username = $this->user['username'];
         $full_name = $this->user['full_name'];
         $registrations = $this->Registrations->find('list',['keyField' => 'slug','valueField' =>'student_id'])->where(['group_id'=> $group_id ]);
-        
+
         $students = $this->Students->find('all')->where(['id IN'=>$registrations->toArray()])->order(['paternal_surname' =>'ASC']);
         $this->set(compact('students','group_id'));
 
@@ -243,14 +242,14 @@ class MenuProfesoresController extends AppController
 
         if(is_null($this->user['group_id']))
                 return $this->redirect(['controller'=>'menu_profesores','action'=>'index']);
-        
+
 
         $message = $this->Messages->newEntity();
 
         if ($this->request->is('post')) {
             $message = $this->Messages->patchEntity($message, $this->request->data);
             if ($this->Messages->save($message)) {
-               
+
 
 
 
@@ -276,7 +275,7 @@ class MenuProfesoresController extends AppController
        exit;
     }
 
-    
+
     public function enviar_correo() {
         $to = '';
         $message = $this->Messages->newEntity();
@@ -298,23 +297,23 @@ class MenuProfesoresController extends AppController
             $to = $this->request->data['email'];
             $this->request->session()->write('Auth.User.data.email',$to);
         }
-        
+
         $from = $this->user['email'];
         $this->set(compact('message','to','from'));
     }
-    
-    
+
+
     public function busqueda(){
         if(isset($this->request->data['profesores'])){
             $this->request->session()->write('Auth.User.data.busqueda',$this->request->data['profesores']);
             return $this->redirect(['controller'=>'menu_profesores','action'=>'profesores']);
         }
-        
+
         if(isset($this->request->data['material'])){
             $this->request->session()->write('Auth.User.data.busqueda',$this->request->data['material']);
             return $this->redirect(['controller'=>'menu_profesores','action'=>'material_didactico']);
         }
-            
+
     }
 
     public function material_didactico(){
@@ -344,10 +343,10 @@ class MenuProfesoresController extends AppController
                                                                     'description LIKE' => '%'.$str.'%',
                                                                     'subject LIKE' => '%'.$str.'%']); });
             }
-        }   
+        }
         $this->set('materials',$materials);
     }
-    
+
     public function profesores(){
         $str = '';
         if(isset($this->user['data']['busqueda']))
@@ -380,7 +379,7 @@ class MenuProfesoresController extends AppController
                                                                     'paternal_surname LIKE' => '%'.$str.'%',
                                                                     'maternal_surname LIKE' => '%'.$str.'%']); });
             }
-        }   
-        $this->set('professors',$professors); 
+        }
+        $this->set('professors',$professors);
     }
 }
